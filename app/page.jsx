@@ -1,7 +1,12 @@
 'use client'; 
+
 import React, { useState, useMemo } from 'react';
 
 const POSFinancialModel = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const correctPassword = 'owner2026';
+  
   const [activeTab, setActiveTab] = useState('summary');
   const [viewMode, setViewMode] = useState('combined');
   
@@ -11,10 +16,6 @@ const POSFinancialModel = () => {
   const [txnFeeRate, setTxnFeeRate] = useState(2.9);
   const [fixedTxnFee, setFixedTxnFee] = useState(0.05);
   const [passthroughRate, setPassthroughRate] = useState(2.0);
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-const [password, setPassword] = useState('');
-const correctPassword = 'owner2026';
   
   const activationScenarios = {
     eoyRamp: [24, 29, 34, 38, 43, 48, 53, 58, 62, 67, 72, 72],
@@ -67,30 +68,6 @@ const correctPassword = 'owner2026';
   const posManagerCosts = [30000, 30000, 30000, 30000, 30000, 30000, 30000, 45000, 45000, 45000, 45000, 45000];
 
   const posMonthlyChurn = (1 - Math.pow(posRetention / 100, 1/12));
-
-  if (!isAuthenticated) {
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-80">
-        <h2 className="text-lg font-semibold mb-4 text-center">Enter Password</h2>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && password === correctPassword && setIsAuthenticated(true)}
-          className="w-full p-2 border rounded mb-4"
-          placeholder="Password"
-        />
-        <button
-          onClick={() => password === correctPassword && setIsAuthenticated(true)}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  );
-}
   
   const posLiveLocs = useMemo(() => {
     const locs = [];
@@ -482,6 +459,30 @@ const correctPassword = 'owner2026';
       <td className="sticky left-0 bg-gray-200 px-3 py-1.5 font-bold border-r" colSpan={13}>{label}</td>
     </tr>
   );
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md w-80">
+          <h2 className="text-lg font-semibold mb-4 text-center">Enter Password</h2>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && password === correctPassword && setIsAuthenticated(true)}
+            className="w-full p-2 border rounded mb-4"
+            placeholder="Password"
+          />
+          <button
+            onClick={() => password === correctPassword && setIsAuthenticated(true)}
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-gray-50 text-xs">
