@@ -341,7 +341,9 @@ const POSFinancialModel = () => {
       return {
         month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][idx],
         totalLocs: r.totalLocs, coreLocs: r.coreLocs, posLocs: r.posLocs, newLocs: r.newLocs, newPOSLocs: r.newPOSLocs,
-        coreChurn: r.coreMonthlyChurn, posChurn: r.posMonthlyChurnPct, blendedChurn: r.blendedChurn,
+        coreRetention: Math.pow(1 - r.coreMonthlyChurn/100, 12) * 100, 
+        posRetention: Math.pow(1 - r.posMonthlyChurnPct/100, 12) * 100, 
+        blendedRetention: Math.pow(1 - r.blendedChurn/100, 12) * 100,
         posPenetration: r.posPenetration * 100,
         coreGPV: r.coreGPV/1000, posGPV: r.posGPV/1000, totalGPV: r.totalGPV/1000,
         coreSubRev: r.coreSubRev/1000, posSubRev: r.posSubRev/1000, totalSubRev: r.totalSubRev/1000,
@@ -469,9 +471,9 @@ const POSFinancialModel = () => {
 
       <div className="bg-white border-b">
         <div className="flex px-4">
-          {['summary', 'model', 'pos-topline', 'pos-cogs'].map(tab => (
+          {['summary', 'model', 'pos-topline', 'pos-cogs', 'methodology'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-xs font-medium border-b-2 ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}`}>
-              {tab === 'summary' ? 'Summary' : tab === 'model' ? 'Financial Model' : tab === 'pos-topline' ? 'POS Top-Line' : 'POS Costs'}
+              {tab === 'summary' ? 'Summary' : tab === 'model' ? 'Financial Model' : tab === 'pos-topline' ? 'POS Top-Line' : tab === 'pos-cogs' ? 'POS Costs' : 'Methodology'}
             </button>
           ))}
         </div>
@@ -492,7 +494,7 @@ const POSFinancialModel = () => {
                   <SectionHeader label="Location Metrics" />
                   <Row label="Live Locations" coreValue={m => fmt(m.coreLocs)} posValue={m => fmt(m.posLocs)} totalValue={m => fmt(m.totalLocs)} bold />
                   <Row label="POS Penetration %" coreValue={m => '-'} posValue={m => fmtP(m.posPenetration)} totalValue={m => fmtP(m.posPenetration)} showSubRows={false} />
-                  <Row label="Monthly Churn %" coreValue={m => fmtP(m.coreChurn, 2)} posValue={m => fmtP(m.posChurn, 2)} totalValue={m => fmtP(m.blendedChurn, 2)} />
+                  <Row label="Annual Retention %" coreValue={m => fmtP(m.coreRetention, 1)} posValue={m => fmtP(m.posRetention, 1)} totalValue={m => fmtP(m.blendedRetention, 1)} />
 
                   <SectionHeader label="GPV" />
                   <Row label="GPV" coreValue={m => fmtC(m.coreGPV)} posValue={m => fmtC(m.posGPV)} totalValue={m => fmtC(m.totalGPV)} bold />
@@ -506,14 +508,14 @@ const POSFinancialModel = () => {
                       {financialModel.map((m, i) => <td key={i} className="px-2 py-1 text-right text-blue-600">{fmtC(m.posPassthroughRev)}</td>)}
                     </tr>
                   )}
-                  <Row label="Net Revenue" coreValue={m => fmtC(m.coreNetRev)} posValue={m => fmtC(m.posNetRev)} totalValue={m => fmtC(m.totalNetRev)} bold />
-                  <Row label="ARPA ($/loc)" coreValue={m => fmtC(m.coreARPA, 0)} posValue={m => fmtC(m.posARPA, 0)} totalValue={m => fmtC(m.totalARPA, 0)} />
-                  <Row label="ARR" coreValue={m => fmtC(m.coreARR)} posValue={m => fmtC(m.posARR)} totalValue={m => fmtC(m.totalARR)} bold />
+                  <Row label="Net Revenue (incl. passthrough)" coreValue={m => fmtC(m.coreNetRev)} posValue={m => fmtC(m.posNetRev)} totalValue={m => fmtC(m.totalNetRev)} bold />
+                  <Row label="ARPA (excl. passthrough)" coreValue={m => fmtC(m.coreARPA, 0)} posValue={m => fmtC(m.posARPA, 0)} totalValue={m => fmtC(m.totalARPA, 0)} />
+                  <Row label="ARR (excl. passthrough)" coreValue={m => fmtC(m.coreARR)} posValue={m => fmtC(m.posARR)} totalValue={m => fmtC(m.totalARR)} bold />
 
                   <SectionHeader label="Cost of Revenue" />
                   <Row label="COGS" coreValue={m => fmtC(m.coreCOGS)} posValue={m => fmtC(m.posCOGS)} totalValue={m => fmtC(m.totalCOGS)} />
                   <Row label="Gross Profit" coreValue={m => fmtC(m.coreGrossProfit)} posValue={m => fmtC(m.posGrossProfit)} totalValue={m => fmtC(m.totalGrossProfit)} bold />
-                  <Row label="Gross Margin %" coreValue={m => fmtP(m.coreGrossMargin)} posValue={m => fmtP(m.posGrossMargin)} totalValue={m => fmtP(m.totalGrossMargin)} />
+                  <Row label="Gross Margin % (excl. onboarding)" coreValue={m => fmtP(m.coreGrossMargin)} posValue={m => fmtP(m.posGrossMargin)} totalValue={m => fmtP(m.totalGrossMargin)} />
 
                   <SectionHeader label="Operating Expenses" />
                   <Row label="Sales" coreValue={m => fmtC(m.coreSales)} posValue={m => fmtC(m.posSales)} totalValue={m => fmtC(m.totalSales)} />
@@ -854,6 +856,72 @@ const POSFinancialModel = () => {
             {/* Formula Note */}
             <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
               <p className="text-xs text-gray-700"><span className="font-semibold">Total Payback</span> = Weighted avg by activations: (Core Acts × Core Payback + POS Acts × POS Payback) / Total Acts</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'methodology' && (
+          <div className="max-w-4xl space-y-4">
+            <div className="bg-white p-5 rounded-lg shadow-sm border">
+              <h3 className="text-sm font-semibold mb-4">Methodology: Blended Metrics</h3>
+              
+              <div className="space-y-4 text-xs">
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total Locations</h4>
+                  <p className="text-gray-600">Total Locations = Core Locations (includes POS customers, as POS is an upsell)</p>
+                  <p className="text-gray-500 mt-1">POS Locations are a subset of Core Locations, not additive.</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total Revenue</h4>
+                  <p className="text-gray-600">Total Net Revenue = Core Net Revenue + POS Net Revenue</p>
+                  <p className="text-gray-500 mt-1">Includes payments passthrough revenue in POS.</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total ARPA (excl. passthrough)</h4>
+                  <p className="text-gray-600">Total ARPA = (Core Net Revenue + POS Sub Revenue + POS Txn Revenue) / Total Locations</p>
+                  <p className="text-gray-500 mt-1">Excludes payments passthrough to show true per-location economics.</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total Gross Margin</h4>
+                  <p className="text-gray-600">Total GM = (Core Gross Profit + POS Gross Profit) / (Core Revenue + POS Revenue excl. passthrough)</p>
+                  <p className="text-gray-500 mt-1">Passthrough excluded from denominator as it has ~0% margin.</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Blended Annual Retention</h4>
+                  <p className="text-gray-600">Blended Monthly Churn = [(Core-only Locs × Core Churn) + (POS Locs × POS Churn)] / Total Locs</p>
+                  <p className="text-gray-600 mt-1">Annual Retention = (1 - Monthly Churn)^12</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total LTV</h4>
+                  <p className="text-gray-600">Weighted by customer mix:</p>
+                  <p className="text-gray-600 mt-1">Total LTV = [(Core-only Locs × Core LTV) + (POS Locs × (Core LTV + POS LTV))] / Total Locs</p>
+                  <p className="text-gray-500 mt-1">POS customers generate both Core and POS lifetime value.</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total CAC</h4>
+                  <p className="text-gray-600">Total CAC = (Core S&M + POS S&M) / Core Activations</p>
+                  <p className="text-gray-500 mt-1">All S&M attributed to Core activations since POS is an upsell, not a new customer acquisition.</p>
+                </div>
+
+                <div className="border-b pb-3">
+                  <h4 className="font-semibold text-gray-800 mb-2">Total CAC Payback</h4>
+                  <p className="text-gray-600">Weighted average by L3M activations:</p>
+                  <p className="text-gray-600 mt-1">Total Payback = (Core Acts × Core Payback + POS Acts × POS Payback) / Total Acts</p>
+                  <p className="text-gray-500 mt-1">Ensures Total Payback is always between Core and POS payback values.</p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-gray-800 mb-2">L3M Calculations</h4>
+                  <p className="text-gray-600">LTV, CAC, and Payback use Last 3 Month (L3M) averages weighted by location count.</p>
+                  <p className="text-gray-500 mt-1">Jan uses 1 month, Feb uses 2 months, Mar+ uses full L3M. Core metrics include Nov/Dec 2025 lookback data.</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
