@@ -10,10 +10,10 @@ const POSFinancialModel = () => {
   const [activeTab, setActiveTab] = useState('summary');
   const [viewMode, setViewMode] = useState('combined');
   
-  const [avgGPV, setAvgGPV] = useState(30000);
+  const [avgGPV, setAvgGPV] = useState(25000);
   const [posRetention, setPosRetention] = useState(85);
-  const [posSubFee, setPosSubFee] = useState(129);
-  const [txnFeeRate, setTxnFeeRate] = useState(2.9);
+  const [posSubFee, setPosSubFee] = useState(250);
+  const [txnFeeRate, setTxnFeeRate] = useState(2.7);
   const [fixedTxnFee, setFixedTxnFee] = useState(0.05);
   const [passthroughRate, setPassthroughRate] = useState(2.0);
   
