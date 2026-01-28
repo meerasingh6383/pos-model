@@ -27,7 +27,7 @@ const POSFinancialModel = () => {
   const startingPOSLocs = 27;
   
   const [hardwareCost] = useState(2300);
-  const [hardwareDiscount, setHardwareDiscount] = useState(0);
+  const [hardwareDiscount, setHardwareDiscount] = useState(50);
   const [avgTerminals, setAvgTerminals] = useState(1.5);
   
   const calcSoftwareCOGS = (gpv) => {
