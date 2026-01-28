@@ -62,6 +62,8 @@ const POSFinancialModel = () => {
   const coreMonthlyChurnRates = [0.030012, 0.032012, 0.027720, 0.027581, 0.027443, 0.027305, 0.027168, 0.027031, 0.026896, 0.026761, 0.026627, 0.026494];
   const coreOnboardingCosts = [650339, 663682, 684643, 717259, 762918, 769584, 795290, 820748, 827966, 840412, 859365, 876037];
   const coreActivations = [671, 730, 754, 854, 879, 902, 934, 937, 983, 1010, 1070, 1079];
+  const coreNewCW = [879, 851, 976, 1015, 1038, 1073, 1078, 1136, 1165, 1227, 1241, 1241];
+  const coreEMRR = [600783, 581280, 669905, 692953, 711876, 737099, 740223, 780028, 803909, 849906, 856989, 856989];
   const coreHWInvesting = [864619, 1143100, 942200, 269773, 286573, 45500, 212100, 102473, 45500, 364973, 364973, 641473];
   const posEPDCosts = [369227, 410293, 490560, 513893, 534427, 616560, 639893, 639893, 660427, 660427, 660427, 660427];
   const posLogisticsCosts = [0, 0, 0, 0, 0, 6533, 6533, 6533, 6533, 6533, 6533, 17733];
@@ -384,6 +386,12 @@ const POSFinancialModel = () => {
         corePayback, posPayback, totalPayback,
         l3mCoreActs: l3mActs, l3mPosActs, l3mTotalActs,
         posActivationsMonth: r.newPOSLocs,
+        coreNewCW: coreNewCW[idx],
+        coreLaunched: coreActivations[idx],
+        coreEMRR: coreEMRR[idx],
+        posNewCW: r.newPOSLocs,
+        posLaunched: r.newPOSLocs,
+        posEMRR: r.newPOSLocs * r.posARPA,
         posCsmCost: posCOGSRamps.csmCosts[idx]/1000,
         posCsCost: posCOGSRamps.csCosts[idx]/1000,
         posLaunchCost: r.posLaunchCost/1000,
@@ -553,9 +561,9 @@ const POSFinancialModel = () => {
 
       <div className="bg-white border-b">
         <div className="flex px-4">
-          {['summary', 'model', 'pos-topline', 'pos-cogs', 'methodology'].map(tab => (
+          {['summary', 'unit-economics', 'model', 'pos-topline', 'pos-cogs', 'methodology'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-xs font-medium border-b-2 ${activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}`}>
-              {tab === 'summary' ? 'Summary' : tab === 'model' ? 'Financial Model' : tab === 'pos-topline' ? 'POS Top-Line' : tab === 'pos-cogs' ? 'POS Costs' : 'Methodology'}
+              {tab === 'summary' ? 'Summary' : tab === 'unit-economics' ? 'Unit Economics' : tab === 'model' ? 'Financial Model' : tab === 'pos-topline' ? 'POS Top-Line' : tab === 'pos-cogs' ? 'POS Costs' : 'Methodology'}
             </button>
           ))}
         </div>
@@ -575,6 +583,9 @@ const POSFinancialModel = () => {
                 <tbody className="divide-y divide-gray-100">
                   <SectionHeader label="Location Metrics" />
                   <Row label="Live Locations" coreValue={m => fmt(m.coreLocs)} posValue={m => fmt(m.posLocs)} totalValue={m => fmt(m.totalLocs)} />
+                  <Row label="New CW" coreValue={m => fmt(m.coreNewCW)} posValue={m => fmt(m.posNewCW)} totalValue={m => fmt(m.coreNewCW + m.posNewCW)} />
+                  <Row label="Launched" coreValue={m => fmt(m.coreLaunched)} posValue={m => fmt(m.posLaunched)} totalValue={m => fmt(m.coreLaunched + m.posLaunched)} />
+                  <Row label="eMRR ($K)" coreValue={m => fmtC(m.coreEMRR / 1000)} posValue={m => fmtC(m.posEMRR / 1000)} totalValue={m => fmtC((m.coreEMRR + m.posEMRR) / 1000)} />
                   <Row label="POS Penetration %" coreValue={m => '-'} posValue={m => fmtP(m.posPenetration)} totalValue={m => fmtP(m.posPenetration)} showSubRows={false} />
                   <Row label="Annual Retention %" coreValue={m => fmtP(m.coreRetention, 1)} posValue={m => fmtP(m.posRetention, 1)} totalValue={m => fmtP(m.blendedRetention, 1)} />
 
@@ -627,12 +638,22 @@ const POSFinancialModel = () => {
                   <SectionHeader label="Operating Income" />
                   <Row label="Operating Income" coreValue={m => fmtC(m.coreOpIncome)} posValue={m => fmtC(m.posOpIncome)} totalValue={m => fmtC(m.totalOpIncome)} />
                   <Row label="Operating Margin %" coreValue={m => fmtP(m.coreOpMargin)} posValue={m => fmtP(m.posOpMargin)} totalValue={m => fmtP(m.totalOpMargin)} />
+                  <Row label="Operating Burn" coreValue={m => fmtC(m.coreOpIncome)} posValue={m => fmtC(m.posOpIncome)} totalValue={m => fmtC(m.totalOpIncome)} />
+                  <tr className="hover:bg-blue-50">
+                    <td className="sticky left-0 bg-white px-3 py-1 border-r">Investing Burn (Core HW)</td>
+                    {financialModel.map((m, i) => (
+                      <td key={i} className="px-2 py-1 text-right">{fmtC(-m.coreHW)}</td>
+                    ))}
+                  </tr>
                   <Row label="Cash Burn (Op + Invest)" coreValue={m => fmtC(m.coreCashBurn)} posValue={m => fmtC(m.posCashBurn)} totalValue={m => fmtC(m.totalCashBurn)} />
 
                   <SectionHeader label="Efficiency Metrics" />
-                  <Row label="LTV ($)" coreValue={m => fmtC(m.coreLTV, 0)} posValue={m => fmtC(m.posLTV, 0)} totalValue={m => fmtC(m.totalLTV, 0)} />
-                  <Row label="CAC ($)" coreValue={m => fmtC(m.coreCAC, 0)} posValue={m => fmtC(m.posCAC, 0)} totalValue={m => fmtC(m.totalCAC, 0)} />
-                  <Row label="LTV/CAC" coreValue={m => m.coreLTVCAC && isFinite(m.coreLTVCAC) ? `${m.coreLTVCAC.toFixed(1)}x` : '-'} posValue={m => m.posLTVCAC && isFinite(m.posLTVCAC) ? `${m.posLTVCAC.toFixed(1)}x` : '-'} totalValue={m => m.totalLTVCAC && isFinite(m.totalLTVCAC) ? `${m.totalLTVCAC.toFixed(1)}x` : '-'} />
+                  <Row label="LTV ($) - Blended" coreValue={m => fmtC(m.coreLTV, 0)} posValue={m => fmtC(m.posLTV, 0)} totalValue={m => fmtC(m.totalLTV, 0)} />
+                  <Row label="CAC ($) - Blended" coreValue={m => fmtC(m.coreCAC, 0)} posValue={m => fmtC(m.posCAC, 0)} totalValue={m => fmtC(m.totalCAC, 0)} />
+                  <Row label="LTV/CAC (Blended)" coreValue={m => m.coreLTVCAC && isFinite(m.coreLTVCAC) ? `${m.coreLTVCAC.toFixed(1)}x` : '-'} posValue={m => m.posLTVCAC && isFinite(m.posLTVCAC) ? `${m.posLTVCAC.toFixed(1)}x` : '-'} totalValue={m => m.totalLTVCAC && isFinite(m.totalLTVCAC) ? `${m.totalLTVCAC.toFixed(1)}x` : '-'} />
+                  <Row label="LTV ($) - Attached" coreValue={m => '-'} posValue={m => '-'} totalValue={m => fmtC(m.coreLTV + m.posLTV, 0)} showSubRows={false} />
+                  <Row label="CAC ($) - Attached" coreValue={m => '-'} posValue={m => '-'} totalValue={m => fmtC(m.coreCAC + m.posCAC, 0)} showSubRows={false} />
+                  <Row label="LTV/CAC (Attached)" coreValue={m => '-'} posValue={m => '-'} totalValue={m => { const attachedLTV = m.coreLTV + m.posLTV; const attachedCAC = m.coreCAC + m.posCAC; return attachedCAC > 0 && isFinite(attachedLTV / attachedCAC) ? `${(attachedLTV / attachedCAC).toFixed(1)}x` : '-'; }} showSubRows={false} />
                   <Row label="CAC Payback (mo)" coreValue={m => m.corePayback && isFinite(m.corePayback) ? fmt(m.corePayback, 1) : '-'} posValue={m => m.posPayback && isFinite(m.posPayback) ? fmt(m.posPayback, 1) : '-'} totalValue={m => m.totalPayback && isFinite(m.totalPayback) ? fmt(m.totalPayback, 1) : '-'} />
                   <tr className="hover:bg-blue-50">
                     <td className="sticky left-0 bg-white px-3 py-1 border-r">Rule of 40</td>
@@ -843,9 +864,9 @@ const POSFinancialModel = () => {
                 </thead>
                 <tbody>
                   {/* Locations */}
-                  <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Locations</td></tr>
+                  <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Location Metrics</td></tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total Locations (EOP)</td>
+                    <td className="py-1.5 px-2">Live Locations (EOP)</td>
                     <td className="text-right py-1.5 px-2">{fmt(financialModel[2]?.totalLocs)}</td>
                     <td className="text-right py-1.5 px-2">{fmt(financialModel[5]?.totalLocs)}</td>
                     <td className="text-right py-1.5 px-2">{fmt(financialModel[8]?.totalLocs)}</td>
@@ -853,20 +874,124 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmt(financialModel[11]?.totalLocs)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 text-blue-600">POS Locations (EOP)</td>
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[2]?.coreLocs)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[5]?.coreLocs)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[8]?.coreLocs)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[11]?.coreLocs)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmt(financialModel[11]?.coreLocs)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[2]?.posLocs)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[5]?.posLocs)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[8]?.posLocs)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[11]?.posLocs)}</td>
-                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium text-blue-600">{fmt(financialModel[11]?.posLocs)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmt(financialModel[11]?.posLocs)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 text-blue-600">POS Penetration</td>
+                    <td className="py-1.5 px-2">New CW</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(0,3).reduce((s,m) => s + m.coreNewCW + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(3,6).reduce((s,m) => s + m.coreNewCW + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(6,9).reduce((s,m) => s + m.coreNewCW + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(9,12).reduce((s,m) => s + m.coreNewCW + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmt(financialModel.reduce((s,m) => s + m.coreNewCW + m.posNewCW, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(0,3).reduce((s,m) => s + m.coreNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(3,6).reduce((s,m) => s + m.coreNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(6,9).reduce((s,m) => s + m.coreNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(9,12).reduce((s,m) => s + m.coreNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmt(financialModel.reduce((s,m) => s + m.coreNewCW, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(0,3).reduce((s,m) => s + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(3,6).reduce((s,m) => s + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(6,9).reduce((s,m) => s + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(9,12).reduce((s,m) => s + m.posNewCW, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmt(financialModel.reduce((s,m) => s + m.posNewCW, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Launched</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(0,3).reduce((s,m) => s + m.coreLaunched + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(3,6).reduce((s,m) => s + m.coreLaunched + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(6,9).reduce((s,m) => s + m.coreLaunched + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel.slice(9,12).reduce((s,m) => s + m.coreLaunched + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmt(financialModel.reduce((s,m) => s + m.coreLaunched + m.posLaunched, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(0,3).reduce((s,m) => s + m.coreLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(3,6).reduce((s,m) => s + m.coreLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(6,9).reduce((s,m) => s + m.coreLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel.slice(9,12).reduce((s,m) => s + m.coreLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmt(financialModel.reduce((s,m) => s + m.coreLaunched, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(0,3).reduce((s,m) => s + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(3,6).reduce((s,m) => s + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(6,9).reduce((s,m) => s + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel.slice(9,12).reduce((s,m) => s + m.posLaunched, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmt(financialModel.reduce((s,m) => s + m.posLaunched, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">eMRR ($K)</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreEMRR + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreEMRR + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreEMRR + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreEMRR + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.coreEMRR + m.posEMRR, 0) / 1000)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreEMRR, 0) / 1000)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posEMRR, 0) / 1000)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posEMRR, 0) / 1000)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 text-blue-600">POS Penetration %</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[2]?.posPenetration)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[5]?.posPenetration)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[8]?.posPenetration)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[11]?.posPenetration)}</td>
-                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium text-blue-600">{fmtP(financialModel[11]?.posPenetration)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtP(financialModel[11]?.posPenetration)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Annual Retention %</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.blendedRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.blendedRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.blendedRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.blendedRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50">{fmtP(financialModel[11]?.blendedRetention, 1)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[2]?.coreRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[5]?.coreRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[8]?.coreRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[11]?.coreRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtP(financialModel[11]?.coreRetention, 1)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[2]?.posRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[5]?.posRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[8]?.posRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[11]?.posRetention, 1)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtP(financialModel[11]?.posRetention, 1)}</td>
                   </tr>
 
                   {/* GPV */}
@@ -899,7 +1024,63 @@ const POSFinancialModel = () => {
                   {/* Revenue */}
                   <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Revenue ($K)</td></tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total Net Revenue</td>
+                    <td className="py-1.5 px-2">Subscription Revenue</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalSubRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreSubRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posSubRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posSubRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Transaction Revenue</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalTxnRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreTxnRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posTxnRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posTxnRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 text-blue-600">Payments Passthrough</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posPassthroughRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posPassthroughRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posPassthroughRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posPassthroughRev, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posPassthroughRev, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Net Revenue (incl. passthrough)</td>
                     <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalNetRev, 0))}</td>
                     <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalNetRev, 0))}</td>
                     <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalNetRev, 0))}</td>
@@ -907,7 +1088,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(summary.totals.totalNetRev)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core Revenue</td>
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreNetRev, 0))}</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreNetRev, 0))}</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreNetRev, 0))}</td>
@@ -915,7 +1096,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(summary.totals.coreNetRev)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS Revenue</td>
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posNetRev, 0))}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posNetRev, 0))}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posNetRev, 0))}</td>
@@ -923,7 +1104,31 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(summary.totals.posNetRev)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total ARR (EOP)</td>
+                    <td className="py-1.5 px-2">ARPA (excl. passthrough)</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.totalARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.totalARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.totalARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.totalARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel[11]?.totalARPA, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[2]?.coreARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[5]?.coreARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[8]?.coreARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[11]?.coreARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel[11]?.coreARPA, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[2]?.posARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[5]?.posARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[8]?.posARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[11]?.posARPA, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel[11]?.posARPA, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">ARR (excl. passthrough)</td>
                     <td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.totalARR)}</td>
                     <td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.totalARR)}</td>
                     <td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.totalARR)}</td>
@@ -931,7 +1136,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel[11]?.totalARR)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core ARR</td>
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[2]?.coreARR)}</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[5]?.coreARR)}</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[8]?.coreARR)}</td>
@@ -939,7 +1144,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel[11]?.coreARR)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS ARR</td>
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[2]?.posARR)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[5]?.posARR)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[8]?.posARR)}</td>
@@ -963,10 +1168,58 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtP(coreArrGrowthPct.Q4, 0)}</td>
                   </tr>
 
-                  {/* Profitability */}
-                  <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Profitability</td></tr>
+                  {/* Cost of Revenue */}
+                  <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Cost of Revenue ($K)</td></tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total Gross Margin %</td>
+                    <td className="py-1.5 px-2">COGS</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalCOGS, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreCOGS, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posCOGS, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posCOGS, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Gross Profit</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(summary.totals.totalGrossProfit)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(summary.totals.coreGrossProfit)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posGrossProfit, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(summary.totals.posGrossProfit)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Gross Margin %</td>
                     <td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.totalGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.totalGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.totalGrossMargin)}</td>
@@ -974,7 +1227,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtP(financialModel[11]?.totalGrossMargin)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core Gross Margin %</td>
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[2]?.coreGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[5]?.coreGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[8]?.coreGrossMargin)}</td>
@@ -982,15 +1235,141 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtP(financialModel[11]?.coreGrossMargin)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS Gross Margin %</td>
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[2]?.posGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[5]?.posGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[8]?.posGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[11]?.posGrossMargin)}</td>
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtP(financialModel[11]?.posGrossMargin)}</td>
                   </tr>
+
+                  {/* Operating Expenses */}
+                  <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Operating Expenses ($K)</td></tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total Operating Income</td>
+                    <td className="py-1.5 px-2">Sales</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalSales, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreSales, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posSales, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posSales, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Onboarding</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalOnboarding, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreOnboarding, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posOnboarding, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posOnboarding, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">R&D (EPD)</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalEPD, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreEPD, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posEPD, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posEPD, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">G&A</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalGA, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreGA, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posGA, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posGA, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Total Opex</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel.reduce((s,m) => s + m.totalOpex, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel.reduce((s,m) => s + m.coreOpex, 0))}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posOpex, 0))}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel.reduce((s,m) => s + m.posOpex, 0))}</td>
+                  </tr>
+
+                  {/* Operating Income */}
+                  <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Operating Income ($K)</td></tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Operating Income</td>
                     <td className={`text-right py-1.5 px-2 ${financialModel.slice(0,3).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 ${financialModel.slice(3,6).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 ${financialModel.slice(6,9).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalOpIncome, 0))}</td>
@@ -998,7 +1377,7 @@ const POSFinancialModel = () => {
                     <td className={`text-right py-1.5 px-2 bg-gray-50 font-medium ${summary.totals.totalOpIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>{fmtC(summary.totals.totalOpIncome)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core Operating Income</td>
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
                     <td className={`text-right py-1.5 px-2 text-gray-600`}>{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 text-gray-600`}>{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 text-gray-600`}>{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreOpIncome, 0))}</td>
@@ -1006,12 +1385,72 @@ const POSFinancialModel = () => {
                     <td className={`text-right py-1.5 px-2 bg-gray-50 text-gray-600`}>{fmtC(summary.totals.coreOpIncome)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS Operating Income</td>
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
                     <td className={`text-right py-1.5 px-2 text-blue-600`}>{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 text-blue-600`}>{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 text-blue-600`}>{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 text-blue-600`}>{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posOpIncome, 0))}</td>
                     <td className={`text-right py-1.5 px-2 bg-gray-50 text-blue-600`}>{fmtC(summary.totals.posOpIncome)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Operating Margin %</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.totalOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.totalOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.totalOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.totalOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtP(financialModel[11]?.totalOpMargin)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[2]?.coreOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[5]?.coreOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[8]?.coreOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtP(financialModel[11]?.coreOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtP(financialModel[11]?.coreOpMargin)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[2]?.posOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[5]?.posOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[8]?.posOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtP(financialModel[11]?.posOpMargin)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtP(financialModel[11]?.posOpMargin)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Operating Burn</td>
+                    <td className={`text-right py-1.5 px-2 ${financialModel.slice(0,3).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalOpIncome, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 ${financialModel.slice(3,6).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalOpIncome, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 ${financialModel.slice(6,9).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalOpIncome, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 ${financialModel.slice(9,12).reduce((s,m) => s + m.totalOpIncome, 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalOpIncome, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 bg-gray-50 font-medium ${summary.totals.totalOpIncome < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {fmtC(summary.totals.totalOpIncome)}
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">Investing Burn (Core HW)</td>
+                    <td className={`text-right py-1.5 px-2 text-red-600`}>
+                      {fmtC(-financialModel.slice(0,3).reduce((s,m) => s + m.coreHW, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 text-red-600`}>
+                      {fmtC(-financialModel.slice(3,6).reduce((s,m) => s + m.coreHW, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 text-red-600`}>
+                      {fmtC(-financialModel.slice(6,9).reduce((s,m) => s + m.coreHW, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 text-red-600`}>
+                      {fmtC(-financialModel.slice(9,12).reduce((s,m) => s + m.coreHW, 0))}
+                    </td>
+                    <td className={`text-right py-1.5 px-2 bg-gray-50 text-red-600`}>
+                      {fmtC(-financialModel.reduce((s,m) => s + m.coreHW, 0))}
+                    </td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-1.5 px-2">Cash Burn (Op + Invest)</td>
@@ -1071,7 +1510,55 @@ const POSFinancialModel = () => {
                   {/* Efficiency Metrics */}
                   <tr className="bg-gray-100"><td colSpan={6} className="py-1.5 px-2 font-semibold">Efficiency Metrics</td></tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total LTV/CAC</td>
+                    <td className="py-1.5 px-2">LTV ($) - Blended</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.totalLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.totalLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.totalLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.totalLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel[11]?.totalLTV, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[2]?.coreLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[5]?.coreLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[8]?.coreLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[11]?.coreLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel[11]?.coreLTV, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[2]?.posLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[5]?.posLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[8]?.posLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[11]?.posLTV, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel[11]?.posLTV, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">CAC ($) - Blended</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.totalCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.totalCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.totalCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.totalCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC(financialModel[11]?.totalCAC, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[2]?.coreCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[5]?.coreCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[8]?.coreCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmtC(financialModel[11]?.coreCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmtC(financialModel[11]?.coreCAC, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[2]?.posCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[5]?.posCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[8]?.posCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmtC(financialModel[11]?.posCAC, 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmtC(financialModel[11]?.posCAC, 0)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">LTV/CAC (Blended)</td>
                     <td className="text-right py-1.5 px-2">{financialModel[2]?.totalLTVCAC?.toFixed(1)}x</td>
                     <td className="text-right py-1.5 px-2">{financialModel[5]?.totalLTVCAC?.toFixed(1)}x</td>
                     <td className="text-right py-1.5 px-2">{financialModel[8]?.totalLTVCAC?.toFixed(1)}x</td>
@@ -1079,7 +1566,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{financialModel[11]?.totalLTVCAC?.toFixed(1)}x</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core LTV/CAC</td>
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{financialModel[2]?.coreLTVCAC?.toFixed(1)}x</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{financialModel[5]?.coreLTVCAC?.toFixed(1)}x</td>
                     <td className="text-right py-1.5 px-2 text-gray-600">{financialModel[8]?.coreLTVCAC?.toFixed(1)}x</td>
@@ -1087,7 +1574,7 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{financialModel[11]?.coreLTVCAC?.toFixed(1)}x</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS LTV/CAC</td>
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{financialModel[2]?.posLTVCAC?.toFixed(1)}x</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{financialModel[5]?.posLTVCAC?.toFixed(1)}x</td>
                     <td className="text-right py-1.5 px-2 text-blue-600">{financialModel[8]?.posLTVCAC?.toFixed(1)}x</td>
@@ -1095,28 +1582,52 @@ const POSFinancialModel = () => {
                     <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{financialModel[11]?.posLTVCAC?.toFixed(1)}x</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2">Total CAC Payback</td>
-                    <td className="text-right py-1.5 px-2">{fmt(financialModel[2]?.totalPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2">{fmt(financialModel[5]?.totalPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2">{fmt(financialModel[8]?.totalPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2">{fmt(financialModel[11]?.totalPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmt(financialModel[11]?.totalPayback, 1)} mo</td>
+                    <td className="py-1.5 px-2">LTV ($) - Attached</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[2]?.coreLTV || 0) + (financialModel[2]?.posLTV || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[5]?.coreLTV || 0) + (financialModel[5]?.posLTV || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[8]?.coreLTV || 0) + (financialModel[8]?.posLTV || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[11]?.coreLTV || 0) + (financialModel[11]?.posLTV || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC((financialModel[11]?.coreLTV || 0) + (financialModel[11]?.posLTV || 0), 0)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core Payback</td>
-                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[2]?.corePayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[5]?.corePayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[8]?.corePayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[11]?.corePayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmt(financialModel[11]?.corePayback, 1)} mo</td>
+                    <td className="py-1.5 px-2">CAC ($) - Attached</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[2]?.coreCAC || 0) + (financialModel[2]?.posCAC || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[5]?.coreCAC || 0) + (financialModel[5]?.posCAC || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[8]?.coreCAC || 0) + (financialModel[8]?.posCAC || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2">{fmtC((financialModel[11]?.coreCAC || 0) + (financialModel[11]?.posCAC || 0), 0)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmtC((financialModel[11]?.coreCAC || 0) + (financialModel[11]?.posCAC || 0), 0)}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS Payback</td>
-                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[2]?.posPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[5]?.posPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[8]?.posPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[11]?.posPayback, 1)} mo</td>
-                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmt(financialModel[11]?.posPayback, 1)} mo</td>
+                    <td className="py-1.5 px-2">LTV/CAC (Attached)</td>
+                    <td className="text-right py-1.5 px-2">{(((financialModel[2]?.coreLTV || 0) + (financialModel[2]?.posLTV || 0)) / ((financialModel[2]?.coreCAC || 0) + (financialModel[2]?.posCAC || 0))).toFixed(1)}x</td>
+                    <td className="text-right py-1.5 px-2">{(((financialModel[5]?.coreLTV || 0) + (financialModel[5]?.posLTV || 0)) / ((financialModel[5]?.coreCAC || 0) + (financialModel[5]?.posCAC || 0))).toFixed(1)}x</td>
+                    <td className="text-right py-1.5 px-2">{(((financialModel[8]?.coreLTV || 0) + (financialModel[8]?.posLTV || 0)) / ((financialModel[8]?.coreCAC || 0) + (financialModel[8]?.posCAC || 0))).toFixed(1)}x</td>
+                    <td className="text-right py-1.5 px-2">{(((financialModel[11]?.coreLTV || 0) + (financialModel[11]?.posLTV || 0)) / ((financialModel[11]?.coreCAC || 0) + (financialModel[11]?.posCAC || 0))).toFixed(1)}x</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{(((financialModel[11]?.coreLTV || 0) + (financialModel[11]?.posLTV || 0)) / ((financialModel[11]?.coreCAC || 0) + (financialModel[11]?.posCAC || 0))).toFixed(1)}x</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2">CAC Payback (mo)</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel[2]?.totalPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel[5]?.totalPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel[8]?.totalPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2">{fmt(financialModel[11]?.totalPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 font-medium">{fmt(financialModel[11]?.totalPayback, 1)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-gray-600">Core</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[2]?.corePayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[5]?.corePayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[8]?.corePayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-gray-600">{fmt(financialModel[11]?.corePayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-gray-600">{fmt(financialModel[11]?.corePayback, 1)}</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-1.5 px-2 pl-4 text-blue-600">POS</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[2]?.posPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[5]?.posPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[8]?.posPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 text-blue-600">{fmt(financialModel[11]?.posPayback, 1)}</td>
+                    <td className="text-right py-1.5 px-2 bg-gray-50 text-blue-600">{fmt(financialModel[11]?.posPayback, 1)}</td>
                   </tr>
 
                   <tr className="border-b">
@@ -1229,6 +1740,98 @@ const POSFinancialModel = () => {
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'unit-economics' && (
+          <div className="max-w-6xl space-y-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <h3 className="text-sm font-semibold mb-4">Quarterly Unit Economics</h3>
+              
+              {/* Total/Blended Unit Economics */}
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Total (Blended)</h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b-2 border-gray-300">
+                      <th className="text-left py-2 px-2">Metric</th>
+                      <th className="text-right py-2 px-2">Q1</th>
+                      <th className="text-right py-2 px-2">Q2</th>
+                      <th className="text-right py-2 px-2">Q3</th>
+                      <th className="text-right py-2 px-2">Q4</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b"><td className="py-1.5 px-2">GPV ($K)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalGPV, 0))}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Sub ARPA ($/mo)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.coreSubRev * 1000 / financialModel[2]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.coreSubRev * 1000 / financialModel[5]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.coreSubRev * 1000 / financialModel[8]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.coreSubRev * 1000 / financialModel[11]?.coreLocs, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Txn ARPA ($/mo)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.coreTxnRev * 1000 / financialModel[2]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.coreTxnRev * 1000 / financialModel[5]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.coreTxnRev * 1000 / financialModel[8]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.coreTxnRev * 1000 / financialModel[11]?.coreLocs, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Gross Profit ($K)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.totalGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.totalGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.totalGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.totalGrossProfit, 0))}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Gross Margin %</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.totalGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.totalGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.totalGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.totalGrossMargin)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Annual Retention %</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.blendedRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.blendedRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.blendedRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.blendedRetention)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">LTV ($)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.totalLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.totalLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.totalLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.totalLTV, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">CAC ($)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.totalCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.totalCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.totalCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.totalCAC, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">LTV/CAC</td><td className="text-right py-1.5 px-2">{financialModel[2]?.totalLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[5]?.totalLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[8]?.totalLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[11]?.totalLTVCAC?.toFixed(1)}x</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">CAC Payback (mo)</td><td className="text-right py-1.5 px-2">{fmt(financialModel[2]?.totalPayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[5]?.totalPayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[8]?.totalPayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[11]?.totalPayback, 1)}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Core Unit Economics */}
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Core</h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b-2 border-gray-300">
+                      <th className="text-left py-2 px-2">Metric</th>
+                      <th className="text-right py-2 px-2">Q1</th>
+                      <th className="text-right py-2 px-2">Q2</th>
+                      <th className="text-right py-2 px-2">Q3</th>
+                      <th className="text-right py-2 px-2">Q4</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-600">
+                    <tr className="border-b"><td className="py-1.5 px-2">GPV ($K)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreGPV, 0))}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Sub ARPA ($/mo)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.coreSubRev * 1000 / financialModel[2]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.coreSubRev * 1000 / financialModel[5]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.coreSubRev * 1000 / financialModel[8]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.coreSubRev * 1000 / financialModel[11]?.coreLocs, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Txn ARPA ($/mo)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.coreTxnRev * 1000 / financialModel[2]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.coreTxnRev * 1000 / financialModel[5]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.coreTxnRev * 1000 / financialModel[8]?.coreLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.coreTxnRev * 1000 / financialModel[11]?.coreLocs, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Gross Profit ($K)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.coreGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.coreGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.coreGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.coreGrossProfit, 0))}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Gross Margin %</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.coreGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.coreGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.coreGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.coreGrossMargin)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Annual Retention %</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.coreRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.coreRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.coreRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.coreRetention)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">LTV ($)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.coreLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.coreLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.coreLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.coreLTV, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">CAC ($)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.coreCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.coreCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.coreCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.coreCAC, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">LTV/CAC</td><td className="text-right py-1.5 px-2">{financialModel[2]?.coreLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[5]?.coreLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[8]?.coreLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[11]?.coreLTVCAC?.toFixed(1)}x</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">CAC Payback (mo)</td><td className="text-right py-1.5 px-2">{fmt(financialModel[2]?.corePayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[5]?.corePayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[8]?.corePayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[11]?.corePayback, 1)}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* POS Unit Economics */}
+              <div>
+                <h4 className="text-xs font-semibold text-blue-600 mb-2 uppercase tracking-wide">POS</h4>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b-2 border-gray-300">
+                      <th className="text-left py-2 px-2">Metric</th>
+                      <th className="text-right py-2 px-2">Q1</th>
+                      <th className="text-right py-2 px-2">Q2</th>
+                      <th className="text-right py-2 px-2">Q3</th>
+                      <th className="text-right py-2 px-2">Q4</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-blue-600">
+                    <tr className="border-b"><td className="py-1.5 px-2">GPV ($K)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posGPV, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posGPV, 0))}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Sub ARPA ($/mo)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.posSubRev * 1000 / financialModel[2]?.posLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.posSubRev * 1000 / financialModel[5]?.posLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.posSubRev * 1000 / financialModel[8]?.posLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.posSubRev * 1000 / financialModel[11]?.posLocs, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Txn ARPA ($/mo)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.posTxnRev * 1000 / financialModel[2]?.posLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.posTxnRev * 1000 / financialModel[5]?.posLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.posTxnRev * 1000 / financialModel[8]?.posLocs, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.posTxnRev * 1000 / financialModel[11]?.posLocs, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Gross Profit ($K)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(0,3).reduce((s,m) => s + m.posGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(3,6).reduce((s,m) => s + m.posGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(6,9).reduce((s,m) => s + m.posGrossProfit, 0))}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel.slice(9,12).reduce((s,m) => s + m.posGrossProfit, 0))}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Gross Margin %</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.posGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.posGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.posGrossMargin)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.posGrossMargin)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">Annual Retention %</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[2]?.posRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[5]?.posRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[8]?.posRetention)}</td><td className="text-right py-1.5 px-2">{fmtP(financialModel[11]?.posRetention)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">LTV ($)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.posLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.posLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.posLTV, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.posLTV, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">CAC ($)</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[2]?.posCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[5]?.posCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[8]?.posCAC, 0)}</td><td className="text-right py-1.5 px-2">{fmtC(financialModel[11]?.posCAC, 0)}</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">LTV/CAC</td><td className="text-right py-1.5 px-2">{financialModel[2]?.posLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[5]?.posLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[8]?.posLTVCAC?.toFixed(1)}x</td><td className="text-right py-1.5 px-2">{financialModel[11]?.posLTVCAC?.toFixed(1)}x</td></tr>
+                    <tr className="border-b"><td className="py-1.5 px-2">CAC Payback (mo)</td><td className="text-right py-1.5 px-2">{fmt(financialModel[2]?.posPayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[5]?.posPayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[8]?.posPayback, 1)}</td><td className="text-right py-1.5 px-2">{fmt(financialModel[11]?.posPayback, 1)}</td></tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
