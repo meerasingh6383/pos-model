@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 const POSFinancialModel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const correctPassword = 'slice2026';
+  const correctPassword = 'owner2026';
   
   const [activeTab, setActiveTab] = useState('summary');
   const [viewMode, setViewMode] = useState('combined');
