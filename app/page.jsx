@@ -18,8 +18,8 @@ const POSFinancialModel = () => {
   
   const activationScenarios = {
     expected: [5, 10, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100],
-    reduced: [5, 10, 15, 20, 25, 30, 40, 50, 50, 50, 50, 50],
-    accelerated: [5, 10, 20, 30, 40, 50, 70, 80, 80, 90, 90, 100],
+    reduced: [5, 10, 15, 20, 25, 35, 40, 50, 50, 50, 50, 50],
+    accelerated: [5, 15, 30, 45, 60, 70, 80, 90, 100, 120, 135, 150],
   };
   const [activationScenario, setActivationScenario] = useState('expected');
   const [posActivations, setPosActivations] = useState(activationScenarios.expected);
@@ -1115,8 +1115,8 @@ const POSFinancialModel = () => {
                 <h3 className="text-sm font-semibold">POS Activation Ramp</h3>
                 <div className="flex gap-2">
 <button onClick={() => { setActivationScenario('expected'); setPosActivations(activationScenarios.expected); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'expected' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200'}`}>Expected (600)</button>
-                  <button onClick={() => { setActivationScenario('reduced'); setPosActivations(activationScenarios.reduced); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'reduced' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200'}`}>Reduced (600)</button>
-                  <button onClick={() => { setActivationScenario('accelerated'); setPosActivations(activationScenarios.accelerated); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'accelerated' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200'}`}>Accelerated (1,000)</button>
+                  <button onClick={() => { setActivationScenario('reduced'); setPosActivations(activationScenarios.reduced); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'reduced' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200'}`}>Reduced (400)</button>
+                  <button onClick={() => { setActivationScenario('accelerated'); setPosActivations(activationScenarios.accelerated); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'accelerated' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200'}`}>Accelerated (900)</button>
                 </div>
               </div>
               <div className="grid grid-cols-12 gap-1">
