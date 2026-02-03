@@ -17,9 +17,9 @@ const POSFinancialModel = () => {
   const [passthroughRate, setPassthroughRate] = useState(2.0);
   
   const activationScenarios = {
-    eoyRamp: [24, 29, 34, 38, 43, 48, 53, 58, 62, 67, 72, 72],
-    balanced: [35, 40, 45, 50, 50, 50, 55, 55, 55, 55, 55, 55],
-    accelerated: [40, 48, 57, 63, 72, 80, 88, 97, 103, 112, 120, 120],
+    expected: [5, 10, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100],
+    reduced: [5, 10, 15, 20, 25, 30, 40, 50, 50, 50, 50, 50],
+    accelerated: [5, 10, 20, 30, 40, 50, 70, 80, 80, 90, 90, 100],
   };
   const [activationScenario, setActivationScenario] = useState('eoyRamp');
   const [posActivations, setPosActivations] = useState(activationScenarios.eoyRamp);
@@ -1078,7 +1078,7 @@ const POSFinancialModel = () => {
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Avg GPV/Location</label>
                   <div className="flex items-center gap-2">
-                    <input type="range" min="10000" max="50000" step="1000" value={avgGPV} onChange={e => setAvgGPV(Number(e.target.value))} className="flex-1" />
+                    <input type="range" min="5000" max="100000" step="1000" value={avgGPV} onChange={e => setAvgGPV(Number(e.target.value))} className="flex-1" />
                     <span className="text-sm font-medium w-20">${(avgGPV/1000).toFixed(0)}K</span>
                   </div>
                 </div>
