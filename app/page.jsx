@@ -1115,7 +1115,7 @@ const POSFinancialModel = () => {
                 <h3 className="text-sm font-semibold">POS Activation Ramp</h3>
                 <div className="flex gap-2">
 <button onClick={() => { setActivationScenario('expected'); setPosActivations(activationScenarios.expected); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'expected' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200'}`}>Expected (600)</button>
-                  <button onClick={() => { setActivationScenario('reduced'); setPosActivations(activationScenarios.reduced); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'reduced' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200'}`}>Reduced (400)</button>
+                  <button onClick={() => { setActivationScenario('reduced'); setPosActivations(activationScenarios.reduced); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'reduced' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200'}`}>Reduced (300)</button>
                   <button onClick={() => { setActivationScenario('accelerated'); setPosActivations(activationScenarios.accelerated); }} className={`px-3 py-1.5 text-xs font-medium rounded border-2 ${activationScenario === 'accelerated' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200'}`}>Accelerated (900)</button>
                 </div>
               </div>
