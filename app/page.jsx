@@ -18,7 +18,7 @@ const POSFinancialModel = () => {
   
   const activationScenarios = {
     expected: [5, 10, 20, 30, 40, 45, 50, 60, 70, 80, 90, 100],
-    reduced: [5, 10, 15, 20, 25, 35, 40, 50, 50, 50, 50, 50],
+    reduced: [1, 10, 12, 15, 15, 30, 30, 35, 35, 37, 40, 40],
     accelerated: [5, 15, 30, 45, 60, 70, 80, 90, 100, 120, 135, 150],
   };
   const [activationScenario, setActivationScenario] = useState('expected');
